@@ -76,7 +76,7 @@ namespace LAB1
                 throw new Exception("Vertex shader failed to compile: " + Gl.GetShaderInfoLog(vshader));
 
             Gl.ShaderSource(fshader, FragmentShaderSource);
-            Gl.CompileShader(fshader);
+            Gl.CompileShader(fshader);    // ha ezt leviszem a vegere hiba: OpenGL ERROR at Vertex Buffer: InvalidValue
 
             program = Gl.CreateProgram();
             Gl.AttachShader(program, vshader);
@@ -86,6 +86,7 @@ namespace LAB1
             Gl.DetachShader(program, fshader);
             Gl.DeleteShader(vshader);
             Gl.DeleteShader(fshader);
+            //Gl.CompileShader(fshader);
 
             Gl.GetProgram(program, GLEnum.LinkStatus, out var status);
             if (status == 0)
@@ -142,30 +143,41 @@ namespace LAB1
             };
 
             uint vertices = Gl.GenBuffer();
-            //Gl.BindBuffer(GLEnum.ArrayBuffer, vertices);    // ha ezt kitorlom, akkor nem rajzol ki semmit
+            Gl.BindBuffer(GLEnum.ArrayBuffer, vertices);    // ha ezt kitorlom, akkor nem rajzol ki semmit
             // a BindBuffer -t barmivel kicserelem nem rajzol ki semmit tobbet
-            Gl.BufferData(GLEnum.ArrayBuffer, (ReadOnlySpan<float>)vertexArray.AsSpan(), GLEnum.StaticDraw);
-            Gl.BindBuffer(GLEnum.ArrayBuffer, vertices);
-            Gl.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, null);
-            Gl.EnableVertexAttribArray(0);
+            Gl.BufferData(GLEnum.ArrayBuffer, (ReadOnlySpan<float>)vertexArray.AsSpan(), GLEnum.StaticDraw);    // ha ezt kiszedem nem rajzol ki semmit
+            //Gl.BindBuffer(GLEnum.ArrayBuffer, vertices);
+            CheckGLError("Vertex Buffer");
+
+            Gl.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, null);    // e nelkul sem rajzol ki semmit
+            Gl.EnableVertexAttribArray(0);   // enelkul sem
+            //Gl.EnableVertexAttribArray(5);    // ha modositottam szintugy nem rajzol ki semmit
+            CheckGLError("Vertex Attribute Pointer");   // position
 
             uint colors = Gl.GenBuffer();
-            Gl.BindBuffer(GLEnum.ArrayBuffer, colors);
-            Gl.BufferData(GLEnum.ArrayBuffer, (ReadOnlySpan<float>)colorArray.AsSpan(), GLEnum.StaticDraw);
-            Gl.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 0, null);
+            Gl.BindBuffer(GLEnum.ArrayBuffer, colors);    // e nelkul semmi sem jelenik meg
+            Gl.BufferData(GLEnum.ArrayBuffer, (ReadOnlySpan<float>)colorArray.AsSpan(), GLEnum.StaticDraw);   // e nelkul egy fekete abra jelenik meg csak
+            CheckGLError("Color Buffer");
+
+            Gl.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 0, null);    // e nelkul szinten egy fekete abra lesz
             Gl.EnableVertexAttribArray(1);
+            CheckGLError("Vertex Attribute Pointer");   // color
 
             uint indices = Gl.GenBuffer();
             Gl.BindBuffer(GLEnum.ElementArrayBuffer, indices);
-            Gl.BufferData(GLEnum.ElementArrayBuffer, (ReadOnlySpan<uint>)indexArray.AsSpan(), GLEnum.StaticDraw);
+            Gl.BufferData(GLEnum.ElementArrayBuffer, (ReadOnlySpan<uint>)indexArray.AsSpan(), GLEnum.StaticDraw);    // ha ezt torlom akkor sem rajzol ki semmit
+            CheckGLError("Index Buffer");
 
             Gl.BindBuffer(GLEnum.ArrayBuffer, 0);
 
-            Gl.UseProgram(program);
+            Gl.UseProgram(program);     // e nelkul nem rajzol ki semmit
+            CheckGLError("Gl.UseProgram");
+
 
             Gl.DrawElements(GLEnum.Triangles, (uint)indexArray.Length, GLEnum.UnsignedInt, null); // we used element buffer
             Gl.BindBuffer(GLEnum.ElementArrayBuffer, 0);
             Gl.BindVertexArray(vao);
+            CheckGLError("Gl.DrawElements");
 
             // always unbound the vertex buffer first, so no halfway results are displayed by accident
             Gl.DeleteBuffer(vertices);
