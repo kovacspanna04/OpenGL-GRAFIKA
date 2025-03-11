@@ -50,8 +50,14 @@ namespace LAB1
             graphicWindow.Load += GraphicWindow_Load;
             graphicWindow.Update += GraphicWindow_Update;
             graphicWindow.Render += GraphicWindow_Render;
+            graphicWindow.Closing += GraphicWindow_Closing;
 
             graphicWindow.Run();
+        }
+
+        private static void GraphicWindow_Closing()
+        {
+            Gl.DeleteProgram(program);
         }
 
         private static void GraphicWindow_Load()
@@ -69,19 +75,21 @@ namespace LAB1
             uint vshader = Gl.CreateShader(ShaderType.VertexShader);
             uint fshader = Gl.CreateShader(ShaderType.FragmentShader);
 
-            Gl.ShaderSource(vshader, VertexShaderSource);
+            // ha ezekbol kiszedtem akkor kidobta a lenti exceptiont
+            Gl.ShaderSource(vshader, VertexShaderSource); 
             Gl.CompileShader(vshader);
             Gl.GetShader(vshader, ShaderParameterName.CompileStatus, out int vStatus);
             if (vStatus != (int)GLEnum.True)
                 throw new Exception("Vertex shader failed to compile: " + Gl.GetShaderInfoLog(vshader));
 
             Gl.ShaderSource(fshader, FragmentShaderSource);
-            Gl.CompileShader(fshader);    // ha ezt leviszem a vegere hiba: OpenGL ERROR at Vertex Buffer: InvalidValue
+            Gl.CompileShader(fshader);    // ha ezt leviszem a vegere hiba: OpenGL ERROR at Gl.UseProgram: InvalidOperation
 
-            program = Gl.CreateProgram();
+            program = Gl.CreateProgram();    // hiba : Error linking shader
+            //OpenGL ERROR at Vertex Buffer: InvalidValue
             Gl.AttachShader(program, vshader);
-            Gl.AttachShader(program, fshader);
-            Gl.LinkProgram(program);
+            Gl.AttachShader(program, fshader);   // ha ezt kiszedem fekete abra + OpenGL ERROR at Vertex Buffer: InvalidOperation
+            Gl.LinkProgram(program);     // nelkule hiba: OpenGL ERROR at Gl.UseProgram: InvalidOperation
             Gl.DetachShader(program, vshader);
             Gl.DetachShader(program, fshader);
             Gl.DeleteShader(vshader);
