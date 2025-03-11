@@ -61,6 +61,9 @@ namespace LAB1
 
             Gl = graphicWindow.CreateOpenGL();
 
+            Gl.Enable(EnableCap.CullFace);
+            Gl.CullFace(TriangleFace.Back);
+
             Gl.ClearColor(System.Drawing.Color.White);
 
             uint vshader = Gl.CreateShader(ShaderType.VertexShader);
@@ -134,7 +137,8 @@ namespace LAB1
 
             uint[] indexArray = new uint[] {
                 0, 1, 2,
-                2, 1, 3
+                //2, 1, 3
+                3, 1, 2            // forditott sorrend
             };
 
             uint vertices = Gl.GenBuffer();
