@@ -21,7 +21,8 @@ namespace LAB1
         void main()
         {
 			outCol = vCol;
-            gl_Position = vec4(vPos.x, vPos.y, vPos.z, 1.0);
+            // gl_Position = vec4(vPos.x, vPos.y, vPos.z, 1.0);
+            gl_Position = vec4(vPos.x * 2.0, vPos.y * 3.0, vPos.z * 4.0, 1.0);   // nagyobb, deformalt abra
         }
         ";
 
@@ -97,6 +98,16 @@ namespace LAB1
             // make it threadsave
             //Console.WriteLine($"Update after {deltaTime} [s]");
         }
+
+        private static void CheckGLError(string location)
+        {
+            var error = Gl.GetError();
+            if (error != GLEnum.NoError)
+            {
+                Console.WriteLine($"OpenGL ERROR at {location}: {error}");
+            }
+        }
+
 
         private static unsafe void GraphicWindow_Render(double deltaTime)
         {
