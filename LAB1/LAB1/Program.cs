@@ -61,7 +61,7 @@ namespace LAB1
 
             Gl = graphicWindow.CreateOpenGL();
 
-            Gl.Enable(EnableCap.CullFace);
+            Gl.Enable(EnableCap.CullFace);          // haromszog egyik oldalanak kirajzolasa(a hata ne latszodjon)
             Gl.CullFace(TriangleFace.Back);
 
             Gl.ClearColor(System.Drawing.Color.White);
@@ -142,8 +142,10 @@ namespace LAB1
             };
 
             uint vertices = Gl.GenBuffer();
-            Gl.BindBuffer(GLEnum.ArrayBuffer, vertices);
+            //Gl.BindBuffer(GLEnum.ArrayBuffer, vertices);    // ha ezt kitorlom, akkor nem rajzol ki semmit
+            // a BindBuffer -t barmivel kicserelem nem rajzol ki semmit tobbet
             Gl.BufferData(GLEnum.ArrayBuffer, (ReadOnlySpan<float>)vertexArray.AsSpan(), GLEnum.StaticDraw);
+            Gl.BindBuffer(GLEnum.ArrayBuffer, vertices);
             Gl.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, null);
             Gl.EnableVertexAttribArray(0);
 
