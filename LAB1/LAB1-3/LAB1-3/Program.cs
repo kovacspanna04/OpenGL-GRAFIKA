@@ -167,7 +167,14 @@ namespace LAB1_3
                 0.0f,  -0.0666f, 0.0f,   0.6f,  0.133f, 0.0f,
 
                 0.4f, -0.4666f, 0.0f,     0.4f,  0.333f, 0.0f,
-                0.2f, -0.533f, 0.0f,      0.2f,  0.266f, 0.0f
+                0.2f, -0.533f, 0.0f,      0.2f,  0.266f, 0.0f,
+
+
+                -0.4f, 0.4666f, 0.0f,    0.2f,  0.266f, 0.0f,
+                -0.2f, 0.53f, 0.0f,     0.4f,  0.333f, 0.0f,
+
+                0.39f, 0.47f, 0.0f,        -0.2f,  0.266f, 0.0f,
+                0.2f, 0.533f, 0.0f,     -0.4f,  0.333f, 0.0f,
             };
 
             uint[] lineIndexArray = new uint[]
@@ -176,7 +183,10 @@ namespace LAB1_3
                 4, 5, 6, 7,   // fuggoleges vonalak
 
                 8, 9, 10, 11,  // vizszintes
-                12, 13, 14, 15 // fuggoleges
+                12, 13, 14, 15, // fuggoleges
+
+                16, 17, 18, 19,
+                20, 21, 22, 23,
             };
 
             uint vertices = Gl.GenBuffer();
