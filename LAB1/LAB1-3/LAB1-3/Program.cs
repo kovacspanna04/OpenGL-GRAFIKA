@@ -215,7 +215,7 @@ namespace LAB1_3
 
 
             // vonalak kirajzolasa
-            Gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line);  // atvaltas vonalrajzolasi modba
+            //Gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line);  // atvaltas vonalrajzolasi modba
 
             uint lineVao = Gl.GenVertexArray();
             Gl.BindVertexArray(lineVao);
@@ -234,7 +234,7 @@ namespace LAB1_3
             Gl.DrawElements(GLEnum.Lines, (uint)lineIndexArray.Length, GLEnum.UnsignedInt, null);
 
             // visszaallitom normal rajzolasra
-            Gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Fill);
+            //Gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Fill);
 
             // vonalakhoz hasznalt bufferek torlese
             Gl.DeleteBuffer(lineVertices);
