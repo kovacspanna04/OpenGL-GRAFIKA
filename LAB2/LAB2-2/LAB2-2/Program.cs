@@ -2,9 +2,8 @@
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
-using static LAB2_1.ModelObjectDescriptor;
 
-namespace LAB2_1
+namespace LAB2_2
 {
     internal class Program
     {
@@ -239,7 +238,7 @@ namespace LAB2_1
             Matrix4X4<float> rotGlobalY = Matrix4X4.CreateRotationY((float)cubeArrangementModel.DiamondCubeGlobalYAngle);
             Matrix4X4<float> dimondCubeModelMatrix = diamondScale * rotx * rotz * roty * trans * rotGlobalY;
             SetMatrix(dimondCubeModelMatrix, ModelMatrixVariableName);
-            
+
             // itt ugyanaz van
             foreach (var part in rubikCubes)
             {
