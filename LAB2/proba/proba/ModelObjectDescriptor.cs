@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Silk.NET.OpenGL;
 
-namespace LAB2_1
+namespace proba
 {
     internal class ModelObjectDescriptor : IDisposable
     {
@@ -133,7 +133,6 @@ namespace LAB2_1
 
         }
 
-        // szinezett 3D kicsi kocka, ahol minden oldalnak mas szine lehet, amit a facecolors szotarbol vesz
         public unsafe static ModelObjectDescriptor CreateCubeWithFaceColors(GL Gl, Dictionary<int, (float r, float g, float b)> faceColors)
         {
             ModelObjectDescriptor obj = CreateCube(Gl);         // uj kockaobjektum

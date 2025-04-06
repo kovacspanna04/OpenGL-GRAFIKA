@@ -3,7 +3,7 @@ using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 
-namespace LAB2_2
+namespace proba
 {
     internal class Program
     {
@@ -74,7 +74,7 @@ namespace LAB2_2
         static void Main(string[] args)
         {
             WindowOptions windowOptions = WindowOptions.Default;
-            windowOptions.Title = "Grafika LAB2-2";
+            windowOptions.Title = "Grafika LAB2-1";
             windowOptions.Size = new Silk.NET.Maths.Vector2D<int>(500, 500);
 
             graphicWindow = Window.Create(windowOptions);
@@ -181,42 +181,18 @@ namespace LAB2_2
         {
             switch (key)
             {
-                case Key.W: 
-                    camera.MoveForward(); 
-                    break;
-                case Key.S: 
-                    camera.MoveBackward(); 
-                    break;
-                case Key.A: 
-                    camera.MoveLeft(); 
-                    break;
-                case Key.D: 
-                    camera.MoveRight(); 
-                    break;
-                case Key.Q: 
-                    camera.MoveUp(); 
-                    break;
-                case Key.E: 
-                    camera.MoveDown(); 
-                    break;
-                case Key.Left: 
-                    camera.DecreaseZYAngle(); 
-                    break;
-                case Key.Right: 
-                    camera.IncreaseZYAngle(); 
-                    break;
-                case Key.Up: 
-                    camera.IncreaseZXAngle(); 
-                    break;
-                case Key.Down: 
-                    camera.DecreaseZXAngle(); 
-                    break;
-                case Key.Space: 
-                    targetRotation += 90f; 
-                    break;
-                case Key.Backspace: 
-                    targetRotation -= 90f; 
-                    break;
+                case Key.W: camera.MoveForward(); break;
+                case Key.S: camera.MoveBackward(); break;
+                case Key.A: camera.MoveLeft(); break;
+                case Key.D: camera.MoveRight(); break;
+                case Key.Q: camera.MoveUp(); break;
+                case Key.E: camera.MoveDown(); break;
+                case Key.Left: camera.DecreaseZYAngle(); break;
+                case Key.Right: camera.IncreaseZYAngle(); break;
+                case Key.Up: camera.DecreaseZXAngle(); break;
+                case Key.Down: camera.IncreaseZXAngle(); break;
+                case Key.Space: targetRotation += 90f; break;
+                case Key.Backspace: targetRotation -= 90f; break;
             }
 
         }
@@ -227,12 +203,11 @@ namespace LAB2_2
             // make it threadsafe
             cubeArrangementModel.AdvanceTime(deltaTime);
 
-            // az animalt forgatashoz
-            if (Math.Abs(currentRotation - targetRotation) > 0.01f)         // megnezi, hogy elertuk e mar a cel forgast
+            if (Math.Abs(currentRotation - targetRotation) > 0.01f)
             {
-                float step = (float)(deltaTime * 90f);      // 90 fok / masodperc forgatasi animacio
-                if (currentRotation < targetRotation)       // ha a forgasszog kisebb mint a cel novelem
-                    currentRotation = Math.Min(currentRotation + step, targetRotation);     // math.min - pl hogy ne tujon tovabb menni 90 foknal
+                float step = (float)(deltaTime * 90f);      // 90 fok / masodperc
+                if (currentRotation < targetRotation)
+                    currentRotation = Math.Min(currentRotation + step, targetRotation);
                 else
                     currentRotation = Math.Max(currentRotation - step, targetRotation);
             }
@@ -265,20 +240,19 @@ namespace LAB2_2
             Matrix4X4<float> dimondCubeModelMatrix = diamondScale * rotx * rotz * roty * trans * rotGlobalY;
             SetMatrix(dimondCubeModelMatrix, ModelMatrixVariableName);
 
-            // hogy a kockanak csak egy adott retege forogjon, a tobbi maradjon valtozatlan
-            var layerRotationMatrix = GetLayerRotationMatrix();     // lekerem az aktualis forgatasi matrixot
+            var layerRotationMatrix = GetLayerRotationMatrix();
 
-            foreach (var part in rubikCubes)        // vegigmegyek a kocka osszes kicsi kockajan
+            foreach (var part in rubikCubes)
             {
-                SetMatrix(part.ModelMatrix, ModelMatrixVariableName);       // beallitom az adott reszhez tartozo modelmatrixot
+                SetMatrix(part.ModelMatrix, ModelMatrixVariableName);
 
-                if (part.LogicalPosition.y == 0)            // ha az also reteghez tarozik
+                if (part.LogicalPosition.y == 0)
                 {
                     SetMatrix(layerRotationMatrix, "uLayerRotation");
                 }
                 else
                 {
-                    SetMatrix(Matrix4X4<float>.Identity, "uLayerRotation");     // kulonben megkapja az egysegmatrixot
+                    SetMatrix(Matrix4X4<float>.Identity, "uLayerRotation");
                 }
                 DrawModelObject(part.Descriptor);
             }
@@ -297,13 +271,12 @@ namespace LAB2_2
         }
 
 
-        // kiszamolja a kocka egy retegenek a forgatasi matrixat
         private static Matrix4X4<float> GetLayerRotationMatrix()
         {
-            float radians = (float)(currentRotation * Math.PI / 180);       // az aktualis szoget radianba teszem
-            var T1 = Matrix4X4.CreateTranslation(-LayerCenter);     // eltolasi matrix(a reteget a sajat kozeppontjabol az origoba mozgatja)
-            var R = Matrix4X4.CreateRotationY(radians);         // y==0 reteg eseten forgatja a megadott radiannal
-            var T2 = Matrix4X4.CreateTranslation(LayerCenter);          // visszaviszi az objektumot az eredeti helyere, maskepp mas helyen jelenik meg
+            float radians = (float)(currentRotation * Math.PI / 180);
+            var T1 = Matrix4X4.CreateTranslation(-LayerCenter);
+            var R = Matrix4X4.CreateRotationY(radians);         // y==0 reteg eseten
+            var T2 = Matrix4X4.CreateTranslation(LayerCenter);
 
             return T1 * R * T2;
         }

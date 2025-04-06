@@ -1,6 +1,6 @@
 ﻿using Silk.NET.Maths;
 
-namespace LAB2_2
+namespace proba
 {
     internal class CameraDescriptor
     {
@@ -8,13 +8,13 @@ namespace LAB2_2
         public double AngleToZYPlane { get; private set; } = 0;
         public double AngleToZXPlane { get; private set; } = 0;
 
-        public Vector3D<float> Center { get; private set; } = Vector3D<float>.Zero;     // a pont amire a kamera nez
+        public Vector3D<float> Center { get; private set; } = Vector3D<float>.Zero;
 
         private const double DistanceScaleFactor = 1.1;
         private const double AngleChangeStepSize = Math.PI / 180 * 5;
         private const float MoveStep = 0.1f;
 
-        public Vector3D<float> Position     // terbeli pozicio
+        public Vector3D<float> Position
         {
             get
             {
@@ -22,20 +22,21 @@ namespace LAB2_2
             }
         }
 
-        public Vector3D<float> UpVector     // felfele nezo irany
+        public Vector3D<float> UpVector
         {
             get
             {
-                var forward = Vector3D.Normalize(Target - Position);        // merre nez
+                var forward = Vector3D.Normalize(Target - Position);
                 var worldUp = Vector3D<float>.UnitY;
-                var right = Vector3D.Normalize(Vector3D.Cross(worldUp, forward));       // y tengely es forvard keresztezese
+                var right = Vector3D.Normalize(Vector3D.Cross(worldUp, forward));
                 var up = Vector3D.Normalize(Vector3D.Cross(forward, right));
                 return up;
             }
         }
 
-        public Vector3D<float> Target => Center;        // visszaadja a megfigyelt pontot
+        public Vector3D<float> Target => Center;
 
+        // --- Szabad mozgás ---
         public void MoveForward()
         {
             var forward = Vector3D.Normalize(Target - Position);

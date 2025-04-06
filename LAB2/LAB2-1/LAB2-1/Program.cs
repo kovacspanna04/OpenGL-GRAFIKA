@@ -146,14 +146,16 @@ namespace LAB2_1
             InitRubikCube();            // itt meghivtam az inicializalast
         }
 
+        // inicializalja mind a 27 kicsi kockat
         private static void InitRubikCube()
         {
             for (int x = 0; x < 3; x++)
                 for (int y = 0; y < 3; y++)
                     for (int z = 0; z < 3; z++)
                     {
-                        Dictionary<int, (float r, float g, float b)> faceColors = new();
+                        Dictionary<int, (float r, float g, float b)> faceColors = new();    // szotar, a kulcs(int) a kocka oldalanak azonositoja
 
+                        // eldontom, hogy a kocka melyik oldalon van, annak fuggvenyeben kapjaa szint
                         if (y == 2) faceColors[0] = (1f, 1f, 1f);   // teto - feher
                         if (y == 0) faceColors[3] = (1f, 1f, 0f);   // alja - sarga
                         if (z == 2) faceColors[1] = (0f, 0f, 1f);   // eleje - kek
@@ -161,12 +163,13 @@ namespace LAB2_1
                         if (x == 0) faceColors[2] = (1f, 0f, 0f);   // bal - piros
                         if (x == 2) faceColors[5] = (1f, 0.5f, 0f); // jobb - narancssarga
 
-                        var descriptor = ModelObjectDescriptor.CreateCubeWithFaceColors(Gl, faceColors);    // ha egyik sem teljesul a fentiekbol, akkor a dictionary alapbol ures lesz, es akkor magatol fekete szint ad neki
+                        var descriptor = ModelObjectDescriptor.CreateCubeWithFaceColors(Gl, faceColors);    // letrehoz egy 3Ds kocka modellt, a szinekkel amit megkapott, amelyik oldal nem kapott szint az fekete
 
+                        // hozzaadom a kockat a rubikkocka elemeinek listajahoz
                         rubikCubes.Add(new RubikCubePart
                         {
-                            Descriptor = descriptor,
-                            ModelMatrix = Matrix4X4.CreateTranslation((x - 1) * 1.1f, (y - 1) * 1.1f, (z - 1) * 1.1f)
+                            Descriptor = descriptor,        // tartalmazza a kocka modelljet, szinekkel
+                            ModelMatrix = Matrix4X4.CreateTranslation((x - 1) * 1.1f, (y - 1) * 1.1f, (z - 1) * 1.1f)       // eltolasi matrix, ami a kockam elmozditja a helyere
                         });
                     }
         }
