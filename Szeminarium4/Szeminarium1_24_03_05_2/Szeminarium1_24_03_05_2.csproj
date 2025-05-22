@@ -9,10 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\man.obj" />
     <None Remove="Resources\teapot.obj" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Resources\man.obj" />
     <EmbeddedResource Include="Resources\teapot.obj" />
   </ItemGroup>
 
@@ -24,5 +26,6 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\minicooper.obj" />
   </ItemGroup>
+
 
 </Project>
