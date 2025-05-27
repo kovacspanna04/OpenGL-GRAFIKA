@@ -19,12 +19,19 @@ namespace GrafikaSzeminarium
 
         private static ModelObjectDescriptor skybox;
 
+        private static ModelObjectDescriptor ground;
+
+        private static ModelObjectDescriptor tree;
+
         private static CameraDescriptor camera = new CameraDescriptor();
 
         private static Vector3 modelPosition = new Vector3(0f, -20f, 0f);
         private static Vector3D<float> objectPosition = new Vector3D<float>(0, 0, 0);
         private static float objectRotation = 0f;
 
+        private static List<Vector3> treePositions = new List<Vector3>();
+
+        private const float GroundY = -10f;
 
         private static bool isTurningLeft = false;
         private static bool isTurningRight = false;
@@ -71,6 +78,7 @@ namespace GrafikaSzeminarium
         {
             model.Dispose();
             skybox.Dispose();
+            tree.Dispose();
             Gl.DeleteProgram(program);
         }
 
@@ -129,6 +137,10 @@ namespace GrafikaSzeminarium
 
             skybox = ModelObjectDescriptor.CreateSkyBox(Gl);
 
+            tree = ModelObjectDescriptor.CreateTreeObject(Gl);
+
+            ground = ModelObjectDescriptor.CreateGroundPlane(Gl, "grass.jpg");
+
             Gl.ClearColor(System.Drawing.Color.White);
 
             Gl.Enable(EnableCap.DepthTest);
@@ -169,6 +181,15 @@ namespace GrafikaSzeminarium
             {
                 Console.WriteLine($"Error linking shader {Gl.GetProgramInfoLog(program)}");
             }
+
+            Random rng = new Random();
+
+            for (int i = 0; i < 1000; i++)
+            {
+                float x = rng.Next(-15000, 15000);
+                float z = rng.Next(-15000, 15000);
+                treePositions.Add(new Vector3(x, GroundY - 150f, z));
+            }
         }
 
         private static string GetEmbeddedResourceAsString(string resourceRelativePath)
@@ -200,13 +221,9 @@ namespace GrafikaSzeminarium
                     moveRight = true;
                     break;
                 case Key.Left:
-                    //camera.DecreaseZYAngle();
-                    //modelRotationAngle += 0.1f; // forgás balra
                     isTurningLeft = true;
                     break;
                 case Key.Right:
-                    //camera.IncreaseZYAngle();
-                    //modelRotationAngle -= 0.1f; // forgás jobbra
                     isTurningRight = true;
                     break;
                 case Key.Down:
@@ -229,9 +246,10 @@ namespace GrafikaSzeminarium
             // NO OpenGL
             // make it threadsafe
 
-            float turnSpeed = 1.5f;
-            //float speed = 50f * (float)deltaTime;
-            float speed = 15f;
+            float turnSpeed = 2.5f;
+            float speed = 10f;
+
+            objectPosition.Y = GroundY;
 
             Vector3D<float> camPos = camera.Position;
             Vector3D<float> camTarget = camera.Target;
@@ -257,17 +275,24 @@ namespace GrafikaSzeminarium
             if (moveRight)
                 objectPosition += right * speed;
 
+            Vector3D<float> cameraTargetPosition = objectPosition;
+            cameraTargetPosition.Y += 100f;
 
             if (camera.Mode == CameraDescriptor.CameraMode.BehindObject)
             {
-                camera.UpdateFollowingBehind(objectPosition, objectRotation);
+                float scale = 20f;
+                float camDistance = 4.0f * scale;
+                float camHeight = 2.5f * scale;
+
+                camera.UpdateFollowingBehind(objectPosition, objectRotation, distance: camDistance, height: camHeight);
             }
             else
             {
-                camera.UpdateCamera(objectPosition, objectRotation);
+                float scale = 20f;
+                camera.UpdateCamera(objectPosition, objectRotation, scale);
             }
 
-            modelPosition = new Vector3(objectPosition.X, -10f, objectPosition.Z);
+            modelPosition = new Vector3(objectPosition.X, GroundY, objectPosition.Z);
         }
 
         private static unsafe void GraphicWindow_Render(double deltaTime)
@@ -285,19 +310,30 @@ namespace GrafikaSzeminarium
             var viewMatrix = Matrix4X4.CreateLookAt(camera.Position, camera.Target, camera.UpVector);
             SetMatrix(viewMatrix, ViewMatrixVariableName);
 
-            var projectionMatrix = Matrix4X4.CreatePerspectiveFieldOfView<float>((float)(Math.PI / 2), 1024f / 768f, 0.1f, 10000000f);
+            var projectionMatrix = Matrix4X4.CreatePerspectiveFieldOfView<float>((float)(Math.PI / 2), 1024f / 768f, 0.1f, 1000000000f);
             SetMatrix(projectionMatrix, ProjectionMatrixVariableName);
 
             DrawSkyBox();
 
-            //var translation = Matrix4X4.CreateTranslation(0f, -20f, 0f);
+            var groundMatrix = Matrix4X4.CreateTranslation(0f, GroundY, 0f);
+            SetModelMatrix(groundMatrix);
 
-            var scale = 1.7f;
-            //float rotation = (float)(camera.AngleToZYPlane + Math.PI); // +180° forgatas
+            if (ground.Texture.HasValue)
+            {
+                int textureLocation = Gl.GetUniformLocation(program, TextureVariableName);
+                Gl.Uniform1(textureLocation, 0);
+                Gl.ActiveTexture(TextureUnit.Texture0);
+                Gl.BindTexture(TextureTarget.Texture2D, ground.Texture.Value);
+            }
 
+            DrawModelObject(ground);
+
+
+            var scale = 20f;
+          
             var modelMatrix = Matrix4X4.CreateScale(scale) *
                   Matrix4X4.CreateRotationY(objectRotation) *
-                  Matrix4X4.CreateTranslation(modelPosition.X, modelPosition.Y, modelPosition.Z);
+                  Matrix4X4.CreateTranslation(modelPosition.X, GroundY, modelPosition.Z);
 
             SetModelMatrix(modelMatrix);
 
@@ -313,15 +349,32 @@ namespace GrafikaSzeminarium
             }
 
             DrawModelObject(model);
+
+            foreach (var pos in treePositions)
+            {
+                var treeMatrix = Matrix4X4.CreateScale(0.8f) *
+                 Matrix4X4.CreateRotationX(-MathF.PI / 2f) *
+                 Matrix4X4.CreateRotationY(0f) *
+                 Matrix4X4.CreateTranslation(pos.X, pos.Y, pos.Z);
+
+                SetModelMatrix(treeMatrix);
+
+                if (tree.Texture.HasValue)
+                {
+                    int textureLocation = Gl.GetUniformLocation(program, TextureVariableName);
+                    Gl.Uniform1(textureLocation, 0);
+                    Gl.ActiveTexture(TextureUnit.Texture0);
+                    Gl.BindTexture(TextureTarget.Texture2D, tree.Texture.Value);
+                }
+
+                DrawModelObject(tree);
+            }
         }
 
 
         private static unsafe void DrawSkyBox()
-        {
-            //var modelMatrixSkyBox = Matrix4X4.CreateScale(10000000f) * Matrix4X4.CreateTranslation(0f, -20f, 0f); ;
-            //SetModelMatrix(modelMatrixSkyBox);
-
-            var modelMatrixSkyBox = Matrix4X4.CreateScale(10000f);
+        { 
+            var modelMatrixSkyBox = Matrix4X4.CreateScale(1000000f);
             SetModelMatrix(modelMatrixSkyBox);
 
             // set the texture
@@ -420,11 +473,6 @@ namespace GrafikaSzeminarium
             var error = (ErrorCode)Gl.GetError();
             if (error != ErrorCode.NoError)
                 throw new Exception("GL.GetError() returned " + error.ToString());
-        }
-
-        public static Vector3 ToNumerics(Vector3D<float> v)
-        {
-            return new Vector3(v.X, v.Y, v.Z);
         }
 
     }

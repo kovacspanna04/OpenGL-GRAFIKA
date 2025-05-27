@@ -1,148 +1,4 @@
-﻿
-//using Silk.NET.Maths;
-
-//namespace Szeminarium
-//{
-//    internal class CameraDescriptor
-//    {
-//        public double DistanceToOrigin { get; private set; } = 15;
-
-//        public double AngleToZYPlane { get; private set; } = 0;
-
-//        public double AngleToZXPlane { get; private set; } = Math.PI / 15;
-
-//        const double DistanceScaleFactor = 1.1;
-
-//        const double AngleChangeStepSize = Math.PI / 10;
-
-//        private Vector3D<float> _target = Vector3D<float>.Zero;
-//        private Vector3D<float> _position = new Vector3D<float>(0, 0, 15);
-
-
-//        /// <summary>
-//        /// Gets the position of the camera.
-//        /// </summary>
-//        //public Vector3D<float> Position
-//        //{
-//        //    get
-//        //    {
-//        //        return GetPointFromAngles(DistanceToOrigin, AngleToZYPlane, AngleToZXPlane);
-//        //    }
-//        //}
-
-//        public Vector3D<float> Target
-//        {
-//            get => _target;
-//            set => _target = value;
-//        }
-
-//        //public Vector3D<float> Position
-//        //{
-//        //    get
-//        //    {
-//        //        return GetCameraPositionRelativeTo(Target);
-//        //    }
-//        //}
-
-//        public Vector3D<float> ComputedPosition
-//        {
-//            get
-//            {
-//                return GetPointFromAngles(DistanceToOrigin, AngleToZYPlane, AngleToZXPlane);
-//            }
-//        }
-
-//        public Vector3D<float> Position
-//        {
-//            get => _position;
-//            set => _position = value;
-//        }
-
-
-
-//        /// <summary>
-//        /// Gets the up vector of the camera.
-//        /// </summary>
-//        public Vector3D<float> UpVector
-//        {
-//            get
-//            {
-//                return Vector3D.Normalize(GetPointFromAngles(DistanceToOrigin, AngleToZYPlane, AngleToZXPlane + Math.PI / 2));
-//            }
-//        }
-
-//        /// <summary>
-//        /// Gets the target point of the camera view.
-//        /// </summary>
-//        //public Vector3D<float> Target
-//        //{
-//        //    get
-//        //    {
-//        //        // For the moment the camera is always pointed at the origin.
-//        //        //return Vector3D<float>.Zero;
-//        //        //return new Vector3D<float>(0f, -1.5f, 0f);
-//        //        var forward = Vector3D.Normalize(Vector3D<float>.Zero - Position);
-//        //        return Position + forward;
-//        //    }
-//        //}
-
-//        public void IncreaseZXAngle()
-//        {
-//            AngleToZXPlane += AngleChangeStepSize;
-//        }
-
-//        public void DecreaseZXAngle()
-//        {
-//            AngleToZXPlane -= AngleChangeStepSize;
-//        }
-
-//        //public void IncreaseZYAngle()
-//        //{
-//        //    AngleToZYPlane += AngleChangeStepSize;
-
-//        //}
-
-//        //public void DecreaseZYAngle()
-//        //{
-//        //    AngleToZYPlane -= AngleChangeStepSize;
-//        //}
-
-//        public void IncreaseZYAngle(float amount)
-//        {
-//            AngleToZYPlane -= amount;
-//        }
-
-//        public void DecreaseZYAngle(float amount)
-//        {
-//            AngleToZYPlane += amount;
-//        }
-
-
-//        public void IncreaseDistance()
-//        {
-//            DistanceToOrigin = DistanceToOrigin * DistanceScaleFactor;
-//        }
-
-//        public void DecreaseDistance()
-//        {
-//            DistanceToOrigin = DistanceToOrigin / DistanceScaleFactor;
-//        }
-
-//        private static Vector3D<float> GetPointFromAngles(double distanceToOrigin, double angleToMinZYPlane, double angleToMinZXPlane)
-//        {
-//            var x = distanceToOrigin * Math.Cos(angleToMinZXPlane) * Math.Sin(angleToMinZYPlane);
-//            var z = distanceToOrigin * Math.Cos(angleToMinZXPlane) * Math.Cos(angleToMinZYPlane);
-//            var y = distanceToOrigin * Math.Sin(angleToMinZXPlane);
-
-//            return new Vector3D<float>((float)x, (float)y, (float)z);
-//        }
-
-//    }
-//}
-
-
-
-using Silk.NET.Maths;
+﻿using Silk.NET.Maths;
 
 namespace Szeminarium
 {
@@ -188,22 +44,30 @@ namespace Szeminarium
             }
         }
 
-        public void UpdateCamera(Vector3D<float> target, float rotation)
+        
+        public void UpdateCamera(Vector3D<float> target, float rotation, float scale = 1f)
         {
             manualPosition = null;
             manualTarget = null;
 
             if (Mode == CameraMode.BehindObject)
             {
-                UpdateFollowingBehind(target, rotation);
+                UpdateFollowingBehind(target, rotation, distance: 3f * scale, height: 1.8f * scale);
             }
             else
             {
                 var forward = new Vector3D<float>((float)Math.Sin(rotation), 0f, (float)Math.Cos(rotation));
-                var eyeLevelOffset = new Vector3D<float>(0f, -1f, 0f);
+                float eyeLevel = 1.5f * scale;
 
-                var camPos = target + forward * 2.9f + eyeLevelOffset;
-                var lookAt = target + forward * 6.5f + eyeLevelOffset;
+                var eyeOffset = new Vector3D<float>(0f, eyeLevel, 0f);
+
+                float distanceFront = 4.5f * scale;
+                float lookAtDistance = 5.0f * scale;
+
+                var camPos = target + forward * distanceFront + eyeOffset;
+                var lookAt = target + forward * lookAtDistance + eyeOffset;
+
+
                 OverrideCamera(camPos, lookAt);
                 Mode = CameraMode.FrontOfObject;
             }
@@ -215,16 +79,20 @@ namespace Szeminarium
             manualTarget = target;
         }
 
-        public void UpdateFollowingBehind(Vector3D<float> target, float rotation, float distance = 5f, float height = 2.5f)
+        public void UpdateFollowingBehind(Vector3D<float> target, float rotation, float distance = 10f, float height = 5f)
         {
-            targetPosition = target + new Vector3D<float>(0f, -1f, 0f);
+            targetPosition = target;
             var offsetAngle = rotation + MathF.PI;
+
             AngleToZYPlane = offsetAngle;
             AngleToZXPlane = Math.Atan2(height, distance);
+
             DistanceToOrigin = Math.Sqrt(distance * distance + height * height);
+
             IsFollowingTarget = true;
             Mode = CameraMode.BehindObject;
         }
+
 
         public void IncreaseZXAngle() => AngleToZXPlane += AngleChangeStepSize;
         public void DecreaseZXAngle() => AngleToZXPlane -= AngleChangeStepSize;

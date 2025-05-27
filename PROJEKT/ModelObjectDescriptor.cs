@@ -141,8 +141,7 @@ namespace GrafikaSzeminarium
             uint offsetPos = 0;
             uint offsetNormals = offsetPos + 3 * sizeof(float);
             uint offsetTexture = offsetNormals + 3 * sizeof(float);
-            // uint vertexSize = offsetTexture + (textureImage == null ? 0u : 2 * sizeof(float));
-            uint vertexSize = offsetTexture + 2 * sizeof(float);        // mindig szamoljuk bele
+            uint vertexSize = offsetTexture + 2 * sizeof(float);
 
             Gl.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, vertexSize, (void*)offsetPos);
             Gl.EnableVertexAttribArray(0);
@@ -170,22 +169,16 @@ namespace GrafikaSzeminarium
 
             if (textureImage != null)
             {
-                // set texture
-                // create texture
                 texture = Gl.GenTexture();
-
-                // activate texture 0
                 Gl.ActiveTexture(TextureUnit.Texture0);
                 // bind texture
                 Gl.BindTexture(TextureTarget.Texture2D, texture.Value);
-                // Here we use "result.Width" and "result.Height" to tell OpenGL about how big our texture is.
+
                 Gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba, (uint)textureImage.Width,
                     (uint)textureImage.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, (ReadOnlySpan<byte>)textureImage.Data.AsSpan());
                 Gl.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
                 Gl.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
 
-                //Gl.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
-                //Gl.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
                 Gl.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
                 Gl.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
 
@@ -336,9 +329,9 @@ namespace GrafikaSzeminarium
                     }
                     else if (parts[0] == "map_Kd" && correctMaterial)
                     {
-                        textureFileName = parts[1]; // found the texture image filename
-                        break;
+                        textureFileName = parts[1];         // mindig frissitem, ha tobb van
                     }
+
                 }
             }
 
@@ -358,6 +351,8 @@ namespace GrafikaSzeminarium
                     var n = vnIdx >= 0 ? objNormals[vnIdx] : new float[] { 0, 0, 0 };
                     var t = vtIdx >= 0 ? objTexcoords[vtIdx] : new float[] { 0, 0 };
 
+                    t[1] = 1.0f - t[1];         // Flip Y koordinata a Blenderhez
+
                     glVertices.AddRange(v);         // position
                     glVertices.AddRange(n);         // normal
                     glVertices.AddRange(t);         // texture
@@ -368,7 +363,6 @@ namespace GrafikaSzeminarium
                 }
             }
 
-            // var textureImage = ReadTextureImage("texture.png");
             var textureImage = ReadTextureImage(textureFileName ?? "texture.png");
 
             return CreateObjectDescriptorFromArrays(Gl,
@@ -379,5 +373,155 @@ namespace GrafikaSzeminarium
         }
 
 
+        internal static ModelObjectDescriptor CreateTreeObject(GL Gl)
+        {
+            List<float[]> objVertices = new List<float[]>();
+            List<float[]> objNormals = new List<float[]>();
+            List<float[]> objTexcoords = new List<float[]>();
+            List<(int v, int vt, int vn)[]> objFaces = new List<(int, int, int)[]>();
+
+            string materialFileName = null;
+            string materialName = null;
+            string textureFileName = null;
+
+            string fullResourceName = "GrafikaSzeminarium.Resources.Tree.obj";
+            using (var objStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(fullResourceName))
+            using (var objReader = new StreamReader(objStream))
+            {
+                while (!objReader.EndOfStream)
+                {
+                    var line = objReader.ReadLine();
+                    if (string.IsNullOrWhiteSpace(line) || !line.Contains(' '))
+                        continue;
+
+                    var lineClassifier = line.Substring(0, line.IndexOf(' '));
+                    var lineData = line.Substring(line.IndexOf(" ")).Trim().Split(' ');
+
+                    switch (lineClassifier)
+                    {
+                        case "mtllib":
+                            materialFileName = lineData[0];
+                            break;
+                        case "usemtl":
+                            materialName = lineData[0];
+                            break;
+                        case "v":
+                            objVertices.Add(lineData.Take(3).Select(s => float.Parse(s, CultureInfo.InvariantCulture)).ToArray());
+                            break;
+                        case "vn":
+                            objNormals.Add(lineData.Take(3).Select(s => float.Parse(s, CultureInfo.InvariantCulture)).ToArray());
+                            break;
+                        case "vt":
+                            objTexcoords.Add(lineData.Take(2).Select(s => float.Parse(s, CultureInfo.InvariantCulture)).ToArray());
+                            break;
+                        case "f":
+                            var face = new (int, int, int)[3];
+                            for (int i = 0; i < 3; i++)
+                            {
+                                var parts = lineData[i].Split('/');
+                                int v = int.Parse(parts[0]) - 1;
+                                int vt = parts.Length > 1 && parts[1] != "" ? int.Parse(parts[1]) - 1 : -1;
+                                int vn = parts.Length > 2 && parts[2] != "" ? int.Parse(parts[2]) - 1 : -1;
+                                face[i] = (v, vt, vn);
+                            }
+                            objFaces.Add(face);
+                            break;
+                    }
+                }
+            }
+
+            if (materialFileName != null)
+            {
+                string mtlResourceName = "GrafikaSzeminarium.Resources." + materialFileName;
+                using var mtlStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(mtlResourceName);
+                using var mtlReader = new StreamReader(mtlStream);
+
+                bool correctMaterial = materialName == null;
+
+                while (!mtlReader.EndOfStream)
+                {
+                    string line = mtlReader.ReadLine();
+                    if (string.IsNullOrWhiteSpace(line) || !line.Contains(' '))
+                        continue;
+
+                    var parts = line.Trim().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length < 2) continue;
+
+                    if (parts[0] == "newmtl")
+                        correctMaterial = (parts[1] == materialName);
+                    else if (parts[0] == "map_Kd" && correctMaterial)
+                    {
+                        textureFileName = parts[1];
+                        break;
+                    }
+                }
+            }
+
+            List<float> glVertices = new List<float>();
+            List<float> glColors = new List<float>();
+            List<uint> glIndices = new List<uint>();
+
+            foreach (var face in objFaces)
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    var (vIdx, vtIdx, vnIdx) = face[i];
+                    var v = objVertices[vIdx];
+                    var n = vnIdx >= 0 ? objNormals[vnIdx] : new float[] { 0f, 0f, 0f };
+                    var t = vtIdx >= 0 ? objTexcoords[vtIdx] : new float[] { 0f, 0f };
+
+                    glVertices.AddRange(v);    // position
+                    glVertices.AddRange(n);    // normal
+                    glVertices.AddRange(t);    // texcoord
+
+                    glColors.AddRange(new float[] { 1f, 1f, 1f, 1f });
+                    glIndices.Add((uint)glIndices.Count);
+                }
+            }
+
+            var textureImage = ReadTextureImage(textureFileName ?? "10447_Pine_Tree_v1_Diffuse.png");
+            return CreateObjectDescriptorFromArrays(Gl, glVertices.ToArray(), glColors.ToArray(), glIndices.ToArray(), textureImage);
+        }
+
+
+        public static ModelObjectDescriptor CreateGroundPlane(GL Gl, string textureName = "grass.jpg")
+        {
+            float size = 100000f;       // placc meret (fel oldalhossz)
+            float repeat = 1000f;       // hanyszor ismetlodjon a textura
+
+            float[] vertexArray = {
+                -size, 0f, -size,  0f, 1f, 0f, 0f, 0f,
+                 size, 0f, -size,  0f, 1f, 0f, repeat, 0f,
+                 size, 0f,  size,  0f, 1f, 0f, repeat, repeat,
+                -size, 0f,  size,  0f, 1f, 0f, 0f, repeat,
+            };
+
+            float[] colorArray = {
+                1f, 1f, 1f, 1f,
+                1f, 1f, 1f, 1f,
+                1f, 1f, 1f, 1f,
+                1f, 1f, 1f, 1f,
+            };
+
+            uint[] indexArray = {
+                0, 1, 2,
+                0, 2, 3
+            };
+
+            var groundTexture = ReadTextureImage(textureName);
+            var desc = CreateObjectDescriptorFromArrays(Gl, vertexArray, colorArray, indexArray, groundTexture);
+
+            // csak itt a placcnal kell a repeat
+            if (desc.Texture.HasValue)
+            {
+                Gl.BindTexture(TextureTarget.Texture2D, desc.Texture.Value);
+                Gl.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.Repeat);
+                Gl.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)GLEnum.Repeat);
+                Gl.BindTexture(TextureTarget.Texture2D, 0);
+            }
+
+            return desc;
+
+        }
     }
 }
