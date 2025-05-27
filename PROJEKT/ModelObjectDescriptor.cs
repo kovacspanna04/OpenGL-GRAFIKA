@@ -479,7 +479,7 @@ namespace GrafikaSzeminarium
                 }
             }
 
-            var textureImage = ReadTextureImage(textureFileName ?? "10447_Pine_Tree_v1_Diffuse.png");
+            var textureImage = ReadTextureImage(textureFileName ?? "10447_Pine_Tree_v1_Diffuse.jpg");
             return CreateObjectDescriptorFromArrays(Gl, glVertices.ToArray(), glColors.ToArray(), glIndices.ToArray(), textureImage);
         }
 

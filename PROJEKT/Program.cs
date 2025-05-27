@@ -47,7 +47,7 @@ namespace GrafikaSzeminarium
         private const string ProjectionMatrixVariableName = "uProjection";
 
         private const string LightColorVariableName = "uLightColor";
-        private const string LightPositionVariableName = "uLightPos";
+        //private const string LightPositionVariableName = "uLightPos";
         private const string ViewPositionVariableName = "uViewPos";
 
         private const string ShinenessVariableName = "uShininess";
@@ -303,7 +303,7 @@ namespace GrafikaSzeminarium
             Gl.UseProgram(program);
 
             SetUniform3(LightColorVariableName, new Vector3(1f, 1f, 1f));
-            SetUniform3(LightPositionVariableName, new Vector3(7f, 7f, 7f));
+            //SetUniform3(LightPositionVariableName, new Vector3(7f, 7f, 7f));
             SetUniform3(ViewPositionVariableName, new Vector3(camera.Position.X, camera.Position.Y, camera.Position.Z));
             SetUniform1(ShinenessVariableName, shininess);
 
