@@ -484,7 +484,7 @@ namespace GrafikaSzeminarium
         }
 
 
-        public static ModelObjectDescriptor CreateGroundPlane(GL Gl, string textureName = "grass.jpg")
+        public static ModelObjectDescriptor CreateGroundPlane(GL Gl, string textureName = "grass1.jpg")
         {
             float size = 100000f;       // placc meret (fel oldalhossz)
             float repeat = 1000f;       // hanyszor ismetlodjon a textura

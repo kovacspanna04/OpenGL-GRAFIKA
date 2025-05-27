@@ -139,7 +139,7 @@ namespace GrafikaSzeminarium
 
             tree = ModelObjectDescriptor.CreateTreeObject(Gl);
 
-            ground = ModelObjectDescriptor.CreateGroundPlane(Gl, "grass.jpg");
+            ground = ModelObjectDescriptor.CreateGroundPlane(Gl, "grass1.jpg");
 
             Gl.ClearColor(System.Drawing.Color.White);
 
