@@ -11,13 +11,9 @@ namespace Szeminarium
         }
 
         public CameraMode Mode { get; private set; } = CameraMode.BehindObject;
-
         public double DistanceToOrigin { get; private set; } = 15;
         public double AngleToZYPlane { get; private set; } = 0;
         public double AngleToZXPlane { get; private set; } = Math.PI / 15;
-
-        private const double DistanceScaleFactor = 1.1;
-        private const double AngleChangeStepSize = Math.PI / 10;
 
         private Vector3D<float> targetPosition = Vector3D<float>.Zero;
         private Vector3D<float>? manualPosition = null;
@@ -29,20 +25,6 @@ namespace Szeminarium
         public Vector3D<float> Position => manualPosition ?? CalculateDefaultPosition();
         public Vector3D<float> Target => manualTarget ?? targetPosition;
         public Vector3D<float> UpVector => new Vector3D<float>(0f, 1f, 0f);
-
-        public void ToggleCameraMode()
-        {
-            if (Mode == CameraMode.BehindObject)
-            {
-                Mode = CameraMode.FrontOfObject;
-            }
-            else
-            {
-                manualPosition = null;
-                manualTarget = null;
-                Mode = CameraMode.BehindObject;
-            }
-        }
 
         
         public void UpdateCamera(Vector3D<float> target, float rotation, float scale = 1f)
@@ -93,14 +75,6 @@ namespace Szeminarium
             Mode = CameraMode.BehindObject;
         }
 
-
-        public void IncreaseZXAngle() => AngleToZXPlane += AngleChangeStepSize;
-        public void DecreaseZXAngle() => AngleToZXPlane -= AngleChangeStepSize;
-        public void IncreaseZYAngle(float amount) => AngleToZYPlane -= amount;
-        public void DecreaseZYAngle(float amount) => AngleToZYPlane += amount;
-        public void IncreaseDistance() => DistanceToOrigin *= DistanceScaleFactor;
-        public void DecreaseDistance() => DistanceToOrigin /= DistanceScaleFactor;
-
         private Vector3D<float> CalculateDefaultPosition()
         {
             if (IsFollowingTarget)
@@ -121,6 +95,37 @@ namespace Szeminarium
             var y = distanceToOrigin * Math.Sin(angleToMinZXPlane);
             return new Vector3D<float>((float)x, (float)y, (float)z);
         }
+
+        public void SetMode(CameraMode newMode, Vector3D<float> target, float rotation, float scale = 1f)
+        {
+            if (Mode == newMode)
+                return;
+
+            if (newMode == CameraMode.BehindObject)
+            {
+                manualPosition = null;
+                manualTarget = null;
+                UpdateFollowingBehind(target, rotation, distance: 3f * scale, height: 1.8f * scale);
+                Mode = CameraMode.BehindObject;
+            }
+            else
+            {
+                var forward = new Vector3D<float>((float)Math.Sin(rotation), 0f, (float)Math.Cos(rotation));
+                float eyeLevel = 1.5f * scale;
+
+                var eyeOffset = new Vector3D<float>(0f, eyeLevel, 0f);
+
+                float distanceFront = 4.5f * scale;
+                float lookAtDistance = 5.0f * scale;
+
+                var camPos = target + forward * distanceFront + eyeOffset;
+                var lookAt = target + forward * lookAtDistance + eyeOffset;
+
+                OverrideCamera(camPos, lookAt);
+                Mode = CameraMode.FrontOfObject;
+            }
+        }
+
     }
 }
 

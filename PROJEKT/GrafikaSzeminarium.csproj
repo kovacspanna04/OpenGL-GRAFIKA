@@ -16,6 +16,7 @@
     <None Remove="Resources\hazmat.obj" />
     <None Remove="Resources\hazmat_fixed.mtl" />
     <None Remove="Resources\hazmat_fixed.obj" />
+    <None Remove="Resources\oversized-tshirt.obj" />
     <None Remove="Resources\skybox.png" />
     <None Remove="Resources\texture.png" />
     <None Remove="Resources\Tree.mtl" />
@@ -32,6 +33,7 @@
     <EmbeddedResource Include="Resources\hazmat.obj" />
     <EmbeddedResource Include="Resources\hazmat_fixed.mtl" />
     <EmbeddedResource Include="Resources\hazmat_fixed.obj" />
+    <EmbeddedResource Include="Resources\oversized-tshirt.obj" />
     <EmbeddedResource Include="Resources\skybox.png" />
     <EmbeddedResource Include="Resources\texture.png" />
     <EmbeddedResource Include="Resources\Tree.mtl" />

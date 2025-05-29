@@ -3,6 +3,7 @@ layout (location = 0) in vec3 vPos;
 layout (location = 1) in vec4 vCol;
 layout (location = 2) in vec3 vNormal;
 layout (location = 3) in vec2 vTexture;
+layout (location = 4) in mat4 instanceMatrix;
 
 uniform mat4 uModel;
 uniform mat3 uNormal;

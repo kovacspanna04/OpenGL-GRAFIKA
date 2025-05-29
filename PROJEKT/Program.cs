@@ -1,6 +1,8 @@
-﻿using Silk.NET.Input;
+﻿using ImGuiNET;
+using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
+using Silk.NET.OpenGL.Extensions.ImGui;
 using Silk.NET.Windowing;
 using System.Dynamic;
 using System.Numerics;
@@ -14,6 +16,8 @@ namespace GrafikaSzeminarium
         private static IWindow graphicWindow;
 
         private static GL Gl;
+
+        private static ImGuiController imguiController;
 
         private static ModelObjectDescriptor model;
 
@@ -47,7 +51,6 @@ namespace GrafikaSzeminarium
         private const string ProjectionMatrixVariableName = "uProjection";
 
         private const string LightColorVariableName = "uLightColor";
-        //private const string LightPositionVariableName = "uLightPos";
         private const string ViewPositionVariableName = "uViewPos";
 
         private const string ShinenessVariableName = "uShininess";
@@ -79,6 +82,7 @@ namespace GrafikaSzeminarium
             model.Dispose();
             skybox.Dispose();
             tree.Dispose();
+            imguiController.Dispose();
             Gl.DeleteProgram(program);
         }
 
@@ -190,6 +194,8 @@ namespace GrafikaSzeminarium
                 float z = rng.Next(-15000, 15000);
                 treePositions.Add(new Vector3(x, GroundY - 150f, z));
             }
+
+            imguiController = new ImGuiController(Gl, graphicWindow, inputContext);
         }
 
         private static string GetEmbeddedResourceAsString(string resourceRelativePath)
@@ -226,18 +232,6 @@ namespace GrafikaSzeminarium
                 case Key.Right:
                     isTurningRight = true;
                     break;
-                case Key.Down:
-                    camera.IncreaseDistance();
-                    break;
-                case Key.Up:
-                    camera.DecreaseDistance();
-                    break;
-                case Key.U:
-                    camera.IncreaseZXAngle();
-                    break;
-                case Key.E:
-                    camera.ToggleCameraMode();
-                    break;
             }
         }
 
@@ -245,6 +239,8 @@ namespace GrafikaSzeminarium
         {
             // NO OpenGL
             // make it threadsafe
+
+            imguiController.Update((float)deltaTime);
 
             float turnSpeed = 2.5f;
             float speed = 10f;
@@ -303,7 +299,6 @@ namespace GrafikaSzeminarium
             Gl.UseProgram(program);
 
             SetUniform3(LightColorVariableName, new Vector3(1f, 1f, 1f));
-            //SetUniform3(LightPositionVariableName, new Vector3(7f, 7f, 7f));
             SetUniform3(ViewPositionVariableName, new Vector3(camera.Position.X, camera.Position.Y, camera.Position.Z));
             SetUniform1(ShinenessVariableName, shininess);
 
@@ -330,7 +325,7 @@ namespace GrafikaSzeminarium
 
 
             var scale = 20f;
-          
+
             var modelMatrix = Matrix4X4.CreateScale(scale) *
                   Matrix4X4.CreateRotationY(objectRotation) *
                   Matrix4X4.CreateTranslation(modelPosition.X, GroundY, modelPosition.Z);
@@ -369,11 +364,34 @@ namespace GrafikaSzeminarium
 
                 DrawModelObject(tree);
             }
+
+            CameraDescriptor.CameraMode selectedMode = camera.Mode;
+
+            ImGui.Begin("Camera mode");
+
+            if (ImGui.RadioButton("Third person", selectedMode == CameraDescriptor.CameraMode.BehindObject))
+            {
+                selectedMode = CameraDescriptor.CameraMode.BehindObject;
+            }
+            if (ImGui.RadioButton("First person", selectedMode == CameraDescriptor.CameraMode.FrontOfObject))
+            {
+                selectedMode = CameraDescriptor.CameraMode.FrontOfObject;
+            }
+
+            ImGui.End();
+
+            if (selectedMode != camera.Mode)
+            {
+                camera.SetMode(selectedMode, objectPosition, objectRotation, 20f);
+            }
+
+            imguiController.Render();
+
         }
 
 
         private static unsafe void DrawSkyBox()
-        { 
+        {
             var modelMatrixSkyBox = Matrix4X4.CreateScale(1000000f);
             SetModelMatrix(modelMatrixSkyBox);
 
