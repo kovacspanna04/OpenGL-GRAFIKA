@@ -10,7 +10,6 @@
 
   <ItemGroup>
     <None Remove="Resources\10447_Pine_Tree_v1_Diffuse.jpg" />
-    <None Remove="Resources\grass.jpg" />
     <None Remove="Resources\grass1.jpg" />
     <None Remove="Resources\hazmat.mtl" />
     <None Remove="Resources\hazmat.obj" />
@@ -19,15 +18,14 @@
     <None Remove="Resources\oversized-tshirt.obj" />
     <None Remove="Resources\skybox.png" />
     <None Remove="Resources\texture.png" />
-    <None Remove="Resources\Tree.mtl" />
-    <None Remove="Resources\Tree.obj" />
+    <None Remove="Resources\Tree1.mtl" />
+    <None Remove="Resources\Tree1.obj" />
     <None Remove="Shaders\FragmentShader.frag" />
     <None Remove="Shaders\VertexShader.vert" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\10447_Pine_Tree_v1_Diffuse.jpg" />
-    <EmbeddedResource Include="Resources\grass.jpg" />
     <EmbeddedResource Include="Resources\grass1.jpg" />
     <EmbeddedResource Include="Resources\hazmat.mtl" />
     <EmbeddedResource Include="Resources\hazmat.obj" />
@@ -36,8 +34,8 @@
     <EmbeddedResource Include="Resources\oversized-tshirt.obj" />
     <EmbeddedResource Include="Resources\skybox.png" />
     <EmbeddedResource Include="Resources\texture.png" />
-    <EmbeddedResource Include="Resources\Tree.mtl" />
-    <EmbeddedResource Include="Resources\Tree.obj" />
+    <EmbeddedResource Include="Resources\Tree1.mtl" />
+    <EmbeddedResource Include="Resources\Tree1.obj" />
     <EmbeddedResource Include="Shaders\FragmentShader.frag" />
     <EmbeddedResource Include="Shaders\VertexShader.vert" />
   </ItemGroup>

@@ -247,7 +247,6 @@ namespace GrafikaSzeminarium
             string materialName = null;
             string textureFileName = null;
 
-            // string fullResourceName = "GrafikaSzeminarium.Resources.hazmat.obj";
             string fullResourceName = "GrafikaSzeminarium.Resources.hazmat_fixed.obj";
             using (var objStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(fullResourceName))
             using (var objReader = new StreamReader(objStream))
@@ -384,7 +383,7 @@ namespace GrafikaSzeminarium
             string materialName = null;
             string textureFileName = null;
 
-            string fullResourceName = "GrafikaSzeminarium.Resources.Tree.obj";
+            string fullResourceName = "GrafikaSzeminarium.Resources.Tree1.obj";
             using (var objStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(fullResourceName))
             using (var objReader = new StreamReader(objStream))
             {
@@ -521,7 +520,6 @@ namespace GrafikaSzeminarium
             }
 
             return desc;
-
         }
     }
 }

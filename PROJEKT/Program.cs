@@ -44,6 +44,12 @@ namespace GrafikaSzeminarium
         private static bool moveLeft = false;
         private static bool moveRight = false;
 
+        private static int health = 100;
+        private const int MaxHealth = 100;
+
+        private static double lastDamageTime = 0;
+        private const double DamageCooldown = 0.5;
+
 
         private const string ModelMatrixVariableName = "uModel";
         private const string NormalMatrixVariableName = "uNormal";
@@ -91,45 +97,58 @@ namespace GrafikaSzeminarium
             Gl = graphicWindow.CreateOpenGL();
 
             var inputContext = graphicWindow.CreateInput();
+            
             foreach (var keyboard in inputContext.Keyboards)
             {
-                keyboard.KeyDown += Keyboard_KeyDown;
-
                 keyboard.KeyDown += (k, key, code) =>
                 {
-                    if (key == Key.Left)
-                        isTurningLeft = true;
-                    else if (key == Key.Right)
-                        isTurningRight = true;
-                };
-
-                keyboard.KeyUp += (k, key, code) =>
-                {
-                    if (key == Key.Left)
-                        isTurningLeft = false;
-                    else if (key == Key.Right)
-                        isTurningRight = false;
+                    switch (key)
+                    {
+                        case Key.W:
+                            moveForward = true; 
+                            break;
+                        case Key.S:
+                            moveBackward = true; 
+                            break;
+                        case Key.A: 
+                            moveLeft = true; 
+                            break;
+                        case Key.D: 
+                            moveRight = true; 
+                            break;
+                        case Key.Left: 
+                            isTurningLeft = true;
+                            break;
+                        case Key.Right: 
+                            isTurningRight = true; 
+                            break;
+                    }
                 };
 
                 keyboard.KeyUp += (k, key, code) =>
                 {
                     switch (key)
                     {
-                        case Key.W:
-                            moveForward = false;
+                        case Key.W: 
+                            moveForward = false; 
                             break;
-                        case Key.S:
+                        case Key.S: 
                             moveBackward = false;
                             break;
-                        case Key.A:
+                        case Key.A: 
                             moveLeft = false;
                             break;
                         case Key.D:
-                            moveRight = false;
+                            moveRight = false; 
+                            break;
+                        case Key.Left: 
+                            isTurningLeft = false;
+                            break;
+                        case Key.Right: 
+                            isTurningRight = false;
                             break;
                     }
                 };
-
             }
 
             graphicWindow.FramebufferResize += s =>
@@ -192,7 +211,7 @@ namespace GrafikaSzeminarium
             {
                 float x = rng.Next(-15000, 15000);
                 float z = rng.Next(-15000, 15000);
-                treePositions.Add(new Vector3(x, GroundY - 150f, z));
+                treePositions.Add(new Vector3(x, GroundY, z));
             }
 
             imguiController = new ImGuiController(Gl, graphicWindow, inputContext);
@@ -210,36 +229,8 @@ namespace GrafikaSzeminarium
             }
         }
 
-        private static void Keyboard_KeyDown(IKeyboard keyboard, Key key, int arg3)
-        {
-            switch (key)
-            {
-                case Key.W:
-                    moveForward = true;
-                    break;
-                case Key.S:
-                    moveBackward = true;
-                    break;
-                case Key.A:
-                    moveLeft = true;
-                    break;
-                case Key.D:
-                    moveRight = true;
-                    break;
-                case Key.Left:
-                    isTurningLeft = true;
-                    break;
-                case Key.Right:
-                    isTurningRight = true;
-                    break;
-            }
-        }
-
         private static void GraphicWindow_Update(double deltaTime)
         {
-            // NO OpenGL
-            // make it threadsafe
-
             imguiController.Update((float)deltaTime);
 
             float turnSpeed = 2.5f;
@@ -289,6 +280,8 @@ namespace GrafikaSzeminarium
             }
 
             modelPosition = new Vector3(objectPosition.X, GroundY, objectPosition.Z);
+
+            CheckCollisionWithTrees(graphicWindow.Time);
         }
 
         private static unsafe void GraphicWindow_Render(double deltaTime)
@@ -347,11 +340,8 @@ namespace GrafikaSzeminarium
 
             foreach (var pos in treePositions)
             {
-                var treeMatrix = Matrix4X4.CreateScale(0.8f) *
-                 Matrix4X4.CreateRotationX(-MathF.PI / 2f) *
-                 Matrix4X4.CreateRotationY(0f) *
-                 Matrix4X4.CreateTranslation(pos.X, pos.Y, pos.Z);
-
+                var treeMatrix = Matrix4X4.CreateScale(0.5f) *
+                Matrix4X4.CreateTranslation(pos.X, pos.Y, pos.Z);
                 SetModelMatrix(treeMatrix);
 
                 if (tree.Texture.HasValue)
@@ -367,7 +357,8 @@ namespace GrafikaSzeminarium
 
             CameraDescriptor.CameraMode selectedMode = camera.Mode;
 
-            ImGui.Begin("Camera mode");
+            ImGui.SetNextWindowPos(new Vector2(10, 10), ImGuiCond.Always);
+            ImGui.Begin("Camera mode", ImGuiWindowFlags.AlwaysAutoResize);
 
             if (ImGui.RadioButton("Third person", selectedMode == CameraDescriptor.CameraMode.BehindObject))
             {
@@ -385,10 +376,21 @@ namespace GrafikaSzeminarium
                 camera.SetMode(selectedMode, objectPosition, objectRotation, 20f);
             }
 
+            ImGui.SetNextWindowPos(new Vector2(10, 90), ImGuiCond.Always);
+            ImGui.Begin("Player Stats", ImGuiWindowFlags.AlwaysAutoResize);
+            ImGui.Text($"Health: {health}/{MaxHealth}");
+            ImGui.ProgressBar((float)health / MaxHealth, new Vector2(200, 20));
+            ImGui.End();
+
+            if (health <= 0)
+            {
+                ImGui.Begin("Game Over");
+                ImGui.Text("You died!");
+                ImGui.End();
+            }
+
             imguiController.Render();
-
         }
-
 
         private static unsafe void DrawSkyBox()
         {
@@ -493,5 +495,35 @@ namespace GrafikaSzeminarium
                 throw new Exception("GL.GetError() returned " + error.ToString());
         }
 
+        
+        private static void CheckCollisionWithTrees(double currentTime)
+        {
+            const float TreeCollisionRadius = 100f;
+            const float PlayerCollisionRadius = 50f;
+
+            Vector2 playerCenter = new Vector2(objectPosition.X, objectPosition.Z);
+
+            foreach (var tree in treePositions)
+            {
+                Vector2 treeCenter = new Vector2(tree.X, tree.Z);
+
+                float dx = playerCenter.X - treeCenter.X;
+                float dz = playerCenter.Y - treeCenter.Y;
+
+                float distanceSquared = dx * dx + dz * dz;
+                float combinedRadius = TreeCollisionRadius + PlayerCollisionRadius;
+
+                if (distanceSquared < combinedRadius * combinedRadius)
+                {
+                    if (currentTime - lastDamageTime >= DamageCooldown)
+                    {
+                        health -= 5;
+                        if (health <= 0) health = 0;
+                        lastDamageTime = currentTime;
+                    }
+                    break;
+                }
+            }
+        }
     }
 }
