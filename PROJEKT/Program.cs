@@ -231,6 +231,9 @@ namespace GrafikaSzeminarium
 
         private static void GraphicWindow_Update(double deltaTime)
         {
+            if (health <= 0)
+                return;
+
             imguiController.Update((float)deltaTime);
 
             float turnSpeed = 2.5f;
@@ -381,13 +384,6 @@ namespace GrafikaSzeminarium
             ImGui.Text($"Health: {health}/{MaxHealth}");
             ImGui.ProgressBar((float)health / MaxHealth, new Vector2(200, 20));
             ImGui.End();
-
-            if (health <= 0)
-            {
-                ImGui.Begin("Game Over");
-                ImGui.Text("You died!");
-                ImGui.End();
-            }
 
             imguiController.Render();
         }
