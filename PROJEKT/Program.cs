@@ -49,7 +49,6 @@ namespace GrafikaSzeminarium
         private static double lastDamageTime = 0;
         private const double DamageCooldown = 0.5;
 
-
         private const string ModelMatrixVariableName = "uModel";
         private const string NormalMatrixVariableName = "uNormal";
         private const string ViewMatrixVariableName = "uView";
@@ -236,7 +235,7 @@ namespace GrafikaSzeminarium
                 if (location == -1)
                     throw new Exception($"{TextureVariableName} uniform not found on shader.");
 
-                Gl.Uniform1(location, 0); // texture unit 0
+                Gl.Uniform1(location, 0);
                 Gl.ActiveTexture(TextureUnit.Texture0);
                 Gl.BindTexture(TextureTarget.Texture2D, texture.Value);
             }
@@ -252,7 +251,7 @@ namespace GrafikaSzeminarium
             float turnSpeed = 2.5f;
             float speed = 10f;
 
-            objectPosition.Y = GroundY;
+            objectPosition.Y = GroundY;     // a jatekos a talaj szintjen
 
             Vector3D<float> camPos = camera.Position;
             Vector3D<float> camTarget = camera.Target;
@@ -278,10 +277,10 @@ namespace GrafikaSzeminarium
             if (moveRight)
                 objectPosition += right * speed;
 
-            Vector3D<float> cameraTargetPosition = objectPosition;
+            Vector3D<float> cameraTargetPosition = objectPosition;      // kamera kovetes frissitese
             cameraTargetPosition.Y += 100f;
 
-            if (camera.Mode == CameraDescriptor.CameraMode.BehindObject)
+            if (camera.Mode == CameraDescriptor.CameraMode.BehindObject)        // ha 3. szemelyben
             {
                 float scale = 20f;
                 float camDistance = 4.0f * scale;
@@ -289,13 +288,13 @@ namespace GrafikaSzeminarium
 
                 camera.UpdateFollowingBehind(objectPosition, objectRotation, distance: camDistance, height: camHeight);
             }
-            else
+            else        // 1.szemelyben
             {
                 float scale = 20f;
                 camera.UpdateCamera(objectPosition, objectRotation, scale);
             }
 
-            modelPosition = new Vector3(objectPosition.X, GroundY, objectPosition.Z);
+            modelPosition = new Vector3(objectPosition.X, GroundY, objectPosition.Z);       // model poziciojat frissiti
 
             CheckCollisionWithTrees(graphicWindow.Time);
         }
@@ -328,19 +327,14 @@ namespace GrafikaSzeminarium
 
             var scale = 20f;
 
-            var modelMatrix = Matrix4X4.CreateScale(scale) *
-                  Matrix4X4.CreateRotationY(objectRotation) *
-                  Matrix4X4.CreateTranslation(modelPosition.X, GroundY, modelPosition.Z);
-
+            var modelMatrix = Matrix4X4.CreateScale(scale) * Matrix4X4.CreateRotationY(objectRotation) * Matrix4X4.CreateTranslation(modelPosition.X, GroundY, modelPosition.Z);
             SetModelMatrix(modelMatrix);
             BindTexture(model.Texture);
-
             DrawModelObject(model);
 
             foreach (var pos in treePositions)
             {
-                var treeMatrix = Matrix4X4.CreateScale(0.5f) *
-                Matrix4X4.CreateTranslation(pos.X, pos.Y, pos.Z);
+                var treeMatrix = Matrix4X4.CreateScale(0.5f) * Matrix4X4.CreateTranslation(pos.X, pos.Y, pos.Z);
                 SetModelMatrix(treeMatrix);
                 BindTexture(tree.Texture);
 
@@ -486,27 +480,28 @@ namespace GrafikaSzeminarium
             const float TreeCollisionRadius = 100f;
             const float PlayerCollisionRadius = 50f;
 
-            Vector2 playerCenter = new Vector2(objectPosition.X, objectPosition.Z);
+            Vector2 playerCenter = new Vector2(objectPosition.X, objectPosition.Z);     // jatekos pozicioja(csak a sikban kell)
 
-            foreach (var tree in treePositions)
+            foreach (var tree in treePositions)     // vegigmegyek az osszes fan
             {
-                Vector2 treeCenter = new Vector2(tree.X, tree.Z);
+                Vector2 treeCenter = new Vector2(tree.X, tree.Z);       // fa pozicioja ugyanugy a sikban
 
+                // tavolsag szamitasa
                 float dx = playerCenter.X - treeCenter.X;
                 float dz = playerCenter.Y - treeCenter.Y;
 
                 float distanceSquared = dx * dx + dz * dz;
                 float combinedRadius = TreeCollisionRadius + PlayerCollisionRadius;
 
-                if (distanceSquared < combinedRadius * combinedRadius)
+                if (distanceSquared < combinedRadius * combinedRadius)      // utkozes eseten
                 {
-                    if (currentTime - lastDamageTime >= DamageCooldown)
+                    if (currentTime - lastDamageTime >= DamageCooldown)     // sebzes alkalmazasa, ha eleg ido eltelt
                     {
                         health -= 5;
-                        if (health <= 0) health = 0;
+                        if (health <= 0) health = 0;        // nem mehet negativba
                         lastDamageTime = currentTime;
                     }
-                    break;
+                    break;      // egyszerre csak egy fatol tud sebzodni
                 }
             }
         }

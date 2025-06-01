@@ -11,11 +11,8 @@
   <ItemGroup>
     <None Remove="Resources\10447_Pine_Tree_v1_Diffuse.jpg" />
     <None Remove="Resources\grass1.jpg" />
-    <None Remove="Resources\hazmat.mtl" />
-    <None Remove="Resources\hazmat.obj" />
     <None Remove="Resources\hazmat_fixed.mtl" />
     <None Remove="Resources\hazmat_fixed.obj" />
-    <None Remove="Resources\oversized-tshirt.obj" />
     <None Remove="Resources\skybox.png" />
     <None Remove="Resources\texture.png" />
     <None Remove="Resources\Tree1.mtl" />
@@ -27,11 +24,8 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\10447_Pine_Tree_v1_Diffuse.jpg" />
     <EmbeddedResource Include="Resources\grass1.jpg" />
-    <EmbeddedResource Include="Resources\hazmat.mtl" />
-    <EmbeddedResource Include="Resources\hazmat.obj" />
     <EmbeddedResource Include="Resources\hazmat_fixed.mtl" />
     <EmbeddedResource Include="Resources\hazmat_fixed.obj" />
-    <EmbeddedResource Include="Resources\oversized-tshirt.obj" />
     <EmbeddedResource Include="Resources\skybox.png" />
     <EmbeddedResource Include="Resources\texture.png" />
     <EmbeddedResource Include="Resources\Tree1.mtl" />

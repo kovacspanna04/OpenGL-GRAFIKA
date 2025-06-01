@@ -29,8 +29,6 @@ namespace GrafikaSzeminarium
 
         public unsafe static ModelObjectDescriptor CreateSkyBox(GL Gl)
         {
-            // counter clockwise is front facing
-            // vx, vy, vz, nx, ny, nz, tu, tv
             float[] vertexArray = new float[] {
                 // top face
                 -0.5f, 0.5f, 0.5f, 0f, -1f, 0f, 1f/4f, 0f/3f,
@@ -126,8 +124,7 @@ namespace GrafikaSzeminarium
             return CreateObjectDescriptorFromArrays(Gl, vertexArray, colorArray, indexArray, skyboxImage);
         }
 
-        private static unsafe ModelObjectDescriptor CreateObjectDescriptorFromArrays(GL Gl, float[] vertexArray, float[] colorArray, uint[] indexArray,
-            ImageResult textureImage = null)
+        private static unsafe ModelObjectDescriptor CreateObjectDescriptorFromArrays(GL Gl, float[] vertexArray, float[] colorArray, uint[] indexArray, ImageResult textureImage = null)
         {
             uint vao = Gl.GenVertexArray();
             Gl.BindVertexArray(vao);
@@ -135,9 +132,6 @@ namespace GrafikaSzeminarium
             uint vertices = Gl.GenBuffer();
             Gl.BindBuffer(GLEnum.ArrayBuffer, vertices);
             Gl.BufferData(GLEnum.ArrayBuffer, (ReadOnlySpan<float>)vertexArray.AsSpan(), GLEnum.StaticDraw);
-            // 0 is position
-            // 2 is normals
-            // 3 is texture
             uint offsetPos = 0;
             uint offsetNormals = offsetPos + 3 * sizeof(float);
             uint offsetTexture = offsetNormals + 3 * sizeof(float);
@@ -155,7 +149,6 @@ namespace GrafikaSzeminarium
             uint colors = Gl.GenBuffer();
             Gl.BindBuffer(GLEnum.ArrayBuffer, colors);
             Gl.BufferData(GLEnum.ArrayBuffer, (ReadOnlySpan<float>)colorArray.AsSpan(), GLEnum.StaticDraw);
-            // 1 is color
             Gl.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 0, null);
             Gl.EnableVertexAttribArray(1);
             Gl.BindBuffer(GLEnum.ArrayBuffer, 0);
@@ -185,18 +178,17 @@ namespace GrafikaSzeminarium
                 // unbinde texture
                 Gl.BindTexture(TextureTarget.Texture2D, 0);
             }
-
             return new ModelObjectDescriptor() { Vao = vao, Vertices = vertices, Colors = colors, Indices = indices, IndexArrayLength = (uint)indexArray.Length, Gl = Gl, Texture = texture };
         }
 
         private static unsafe ImageResult ReadTextureImage(string textureResource)
         {
-            ImageResult result;
-            using (Stream skyeboxStream
-                = typeof(ModelObjectDescriptor).Assembly.GetManifestResourceStream("GrafikaSzeminarium.Resources." + textureResource))
-                result = ImageResult.FromStream(skyeboxStream, ColorComponents.RedGreenBlueAlpha);
+            var resourceName = $"GrafikaSzeminarium.Resources.{textureResource}";
 
-            return result;
+            using var stream = typeof(ModelObjectDescriptor).Assembly.GetManifestResourceStream(resourceName)
+                              ?? throw new FileNotFoundException($"Resource not found: {resourceName}");
+
+            return ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -238,18 +230,18 @@ namespace GrafikaSzeminarium
 
         internal static ModelObjectDescriptor CreateTexturedObj(GL Gl)
         {
-            List<float[]> objVertices = new List<float[]>();
-            List<float[]> objNormals = new List<float[]>();
-            List<float[]> objTexcoords = new List<float[]>();
-            List<(int v, int vt, int vn)[]> objFaces = new List<(int, int, int)[]>();
+            List<float[]> objVertices = new List<float[]>();        // v sorok az obj fileban
+            List<float[]> objNormals = new List<float[]>();     // vn
+            List<float[]> objTexcoords = new List<float[]>();        // vt
+            List<(int v, int vt, int vn)[]> objFaces = new List<(int, int, int)[]>();       // f
 
-            string materialFileName = null;
-            string materialName = null;
-            string textureFileName = null;
+            string materialFileName = null;     // mtllib sorbol jon (az mtl neve)
+            string materialName = null;     // a usemtl sorbol 
+            string textureFileName = null;      // a map_Kd sorbol
 
             string fullResourceName = "GrafikaSzeminarium.Resources.hazmat_fixed.obj";
-            using (var objStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(fullResourceName))
-            using (var objReader = new StreamReader(objStream))
+            using (var objStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(fullResourceName))     // stream-kent megnyitom
+            using (var objReader = new StreamReader(objStream))     // soronkent olvasom
             {
                 while (!objReader.EndOfStream)
                 {
@@ -263,10 +255,10 @@ namespace GrafikaSzeminarium
                     switch (lineClassifier)
                     {
                         case "mtllib":
-                            materialFileName = lineData[0]; // hazmat.mtl
+                            materialFileName = lineData[0];
                             break;
                         case "usemtl":
-                            materialName = lineData[0]; // Material.001
+                            materialName = lineData[0];
                             break;
                         case "v":
                             float[] vertex = new float[3];
@@ -304,10 +296,10 @@ namespace GrafikaSzeminarium
                 }
             }
 
-            if (materialFileName != null)
+            if (materialFileName != null)       // ha volt mtllib
             {
                 string mtlResourceName = "GrafikaSzeminarium.Resources." + materialFileName;
-                using var mtlStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(mtlResourceName);
+                using var mtlStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(mtlResourceName);       // ezt is beolvassa
                 using var mtlReader = new StreamReader(mtlStream);
 
                 bool correctMaterial = materialName == null;
@@ -322,11 +314,11 @@ namespace GrafikaSzeminarium
                     if (parts.Length < 2)
                         continue;
 
-                    if (parts[0] == "newmtl")
+                    if (parts[0] == "newmtl")       // megkeresi azt a newmtl-t, ami megegyezik a usemtl-ben megadottal
                     {
                         correctMaterial = (parts[1] == materialName);
                     }
-                    else if (parts[0] == "map_Kd" && correctMaterial)
+                    else if (parts[0] == "map_Kd" && correctMaterial)       // ha map_Kd sor jon, eltarolja a textura file nevet
                     {
                         textureFileName = parts[1];         // mindig frissitem, ha tobb van
                     }
@@ -362,7 +354,7 @@ namespace GrafikaSzeminarium
                 }
             }
 
-            var textureImage = ReadTextureImage(textureFileName ?? "texture.png");
+            var textureImage = ReadTextureImage(textureFileName ?? "texture.png");      // ha a .mtl ben nem volt kepnev, akkor ezt olvassa be
 
             return CreateObjectDescriptorFromArrays(Gl,
                 glVertices.ToArray(),
@@ -510,7 +502,7 @@ namespace GrafikaSzeminarium
             var groundTexture = ReadTextureImage(textureName);
             var desc = CreateObjectDescriptorFromArrays(Gl, vertexArray, colorArray, indexArray, groundTexture);
 
-            // csak itt a placcnal kell a repeat
+            // csak itt a placcnal kell a repeat, hogy a textura ismetlodjon
             if (desc.Texture.HasValue)
             {
                 Gl.BindTexture(TextureTarget.Texture2D, desc.Texture.Value);
@@ -518,7 +510,6 @@ namespace GrafikaSzeminarium
                 Gl.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)GLEnum.Repeat);
                 Gl.BindTexture(TextureTarget.Texture2D, 0);
             }
-
             return desc;
         }
     }

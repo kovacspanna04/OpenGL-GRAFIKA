@@ -4,7 +4,7 @@ namespace Szeminarium
 {
     internal class CameraDescriptor
     {
-        public enum CameraMode
+        public enum CameraMode      // kamera nezet modjai
         {
             BehindObject,
             FrontOfObject
@@ -75,7 +75,7 @@ namespace Szeminarium
             Mode = CameraMode.BehindObject;
         }
 
-        private Vector3D<float> CalculateDefaultPosition()
+        private Vector3D<float> CalculateDefaultPosition()      // ha nem volt manualisan megadva pozicio, ez szamitja ki
         {
             if (IsFollowingTarget)
             {
@@ -98,7 +98,7 @@ namespace Szeminarium
 
         public void SetMode(CameraMode newMode, Vector3D<float> target, float rotation, float scale = 1f)
         {
-            if (Mode == newMode)
+            if (Mode == newMode)        // ha mar a kivant modban van nem csinal semmit
                 return;
 
             if (newMode == CameraMode.BehindObject)
