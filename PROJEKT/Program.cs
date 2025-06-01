@@ -4,7 +4,6 @@ using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Silk.NET.OpenGL.Extensions.ImGui;
 using Silk.NET.Windowing;
-using System.Dynamic;
 using System.Numerics;
 using System.Reflection;
 using Szeminarium;
@@ -29,8 +28,8 @@ namespace GrafikaSzeminarium
 
         private static CameraDescriptor camera = new CameraDescriptor();
 
-        private static Vector3 modelPosition = new Vector3(0f, -20f, 0f);
-        private static Vector3D<float> objectPosition = new Vector3D<float>(0, 0, 0);
+        private static Vector3 modelPosition;
+        private static Vector3D<float> objectPosition;
         private static float objectRotation = 0f;
 
         private static List<Vector3> treePositions = new List<Vector3>();
@@ -229,6 +228,20 @@ namespace GrafikaSzeminarium
             }
         }
 
+        private static void BindTexture(uint? texture)
+        {
+            if (texture.HasValue)
+            {
+                int location = Gl.GetUniformLocation(program, TextureVariableName);
+                if (location == -1)
+                    throw new Exception($"{TextureVariableName} uniform not found on shader.");
+
+                Gl.Uniform1(location, 0); // texture unit 0
+                Gl.ActiveTexture(TextureUnit.Texture0);
+                Gl.BindTexture(TextureTarget.Texture2D, texture.Value);
+            }
+        }
+
         private static void GraphicWindow_Update(double deltaTime)
         {
             if (health <= 0)
@@ -308,14 +321,7 @@ namespace GrafikaSzeminarium
 
             var groundMatrix = Matrix4X4.CreateTranslation(0f, GroundY, 0f);
             SetModelMatrix(groundMatrix);
-
-            if (ground.Texture.HasValue)
-            {
-                int textureLocation = Gl.GetUniformLocation(program, TextureVariableName);
-                Gl.Uniform1(textureLocation, 0);
-                Gl.ActiveTexture(TextureUnit.Texture0);
-                Gl.BindTexture(TextureTarget.Texture2D, ground.Texture.Value);
-            }
+            BindTexture(ground.Texture);
 
             DrawModelObject(ground);
 
@@ -327,17 +333,7 @@ namespace GrafikaSzeminarium
                   Matrix4X4.CreateTranslation(modelPosition.X, GroundY, modelPosition.Z);
 
             SetModelMatrix(modelMatrix);
-
-            if (model.Texture.HasValue)
-            {
-                int textureLocation = Gl.GetUniformLocation(program, TextureVariableName);
-                if (textureLocation == -1)
-                    throw new Exception($"{TextureVariableName} uniform not found on shader.");
-
-                Gl.Uniform1(textureLocation, 0); // texture unit 0
-                Gl.ActiveTexture(TextureUnit.Texture0);
-                Gl.BindTexture(TextureTarget.Texture2D, model.Texture.Value);
-            }
+            BindTexture(model.Texture);
 
             DrawModelObject(model);
 
@@ -346,14 +342,7 @@ namespace GrafikaSzeminarium
                 var treeMatrix = Matrix4X4.CreateScale(0.5f) *
                 Matrix4X4.CreateTranslation(pos.X, pos.Y, pos.Z);
                 SetModelMatrix(treeMatrix);
-
-                if (tree.Texture.HasValue)
-                {
-                    int textureLocation = Gl.GetUniformLocation(program, TextureVariableName);
-                    Gl.Uniform1(textureLocation, 0);
-                    Gl.ActiveTexture(TextureUnit.Texture0);
-                    Gl.BindTexture(TextureTarget.Texture2D, tree.Texture.Value);
-                }
+                BindTexture(tree.Texture);
 
                 DrawModelObject(tree);
             }
